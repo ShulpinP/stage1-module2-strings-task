@@ -1,7 +1,9 @@
 package com.epam.mjc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MethodParser {
 
@@ -23,31 +25,39 @@ public class MethodParser {
      * @return {@link MethodSignature} object filled with parsed values from source string
      */
     public MethodSignature parseFunction(String signatureString) {
-        MethodSignature methodSignature = null;
-        ArrayList<MethodSignature.Argument> argumentList = new ArrayList<>();
-
-        String argumentsInSignature = signatureString.substring(signatureString.indexOf("("),signatureString.indexOf(")"));
-        if (!argumentsInSignature.equals("")) {
-        String[] argumentsList = argumentsInSignature.split(", ");
-        MethodSignature.Argument argument = null;
-        for (String s : argumentsList) {
-            String[] argumentParameters = s.split(" ");
-            argument.setType(argumentParameters[0]);
-            argument.setName(argumentParameters[1]);
-            argumentList.add(argument);
-        }
-        }
-        String partsOfSignature = signatureString.substring(0,signatureString.indexOf("("));
-        List<String> partsList = new ArrayList<>(List.of(partsOfSignature.split(" ")));
-        if (partsList.size() == 2) {
-            partsList.add(0, "");
-        }
-            methodSignature.setAccessModifier(partsList.get(0));
-            methodSignature.setReturnType(partsList.get(1));
-            methodSignature.setMethodName(partsList.get(2));
+        String[] splitString = signatureString.split("\\(");
+        int lenghtOfArguments = splitString[1].length()-1;
+        String argumentsInSignature = splitString[1].substring(0, lenghtOfArguments);
+        String partsInSignature = splitString[0];
+        Map<String,String> signatureMap = parseParts(partsInSignature);
+        List<MethodSignature.Argument> arguments = parseArguments(argumentsInSignature);
+        MethodSignature methodSignature = new MethodSignature(signatureMap.get("methodName"),arguments);
+        methodSignature.setReturnType(signatureMap.get("returnType"));
+        methodSignature.setAccessModifier(signatureMap.get("accessModifier"));
         return methodSignature;
+    }
 
-        }
-
+     private List<MethodSignature.Argument> parseArguments (String argumentsInSignature) {
+         List<MethodSignature.Argument> arguments = new ArrayList<>();
+         if (!argumentsInSignature.isEmpty()) {
+             String[] argumentsList = argumentsInSignature.split(", ");
+             for (String s : argumentsList) {
+                 String[] argumentParameters = s.split(" ");
+                 arguments.add(new MethodSignature.Argument(argumentParameters[0],argumentParameters[1]));
+             }
+         }
+             return arguments;
+         }
+        private Map<String,String> parseParts(String partsOfSignature) {
+            Map<String,String> partsMap = new HashMap<>();
+            String[] partsList = partsOfSignature.split(" ");
+            int flag = 0;
+            if (partsList.length == 3) {
+                partsMap.put("accessModifier", partsList[flag++]);
+            }
+            partsMap.put("returnType",partsList[flag++]);
+            partsMap.put("methodName",partsList[flag]);
+            return partsMap;
+            }
     }
 
